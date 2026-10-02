@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Times tables</title>
+<meta name="description" content="Calm times tables practice, 2×2 to 12×12, with spaced repetition.">
+<style>@font-face{font-family:'Atkinson Hyperlegible';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/atkinson-hyperlegible-400.woff2) format('woff2')}@font-face{font-family:'Atkinson Hyperlegible';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/atkinson-hyperlegible-700.woff2) format('woff2')}@font-face{font-family:'Patrick Hand';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/patrick-hand-400.woff2) format('woff2')}</style>
+<style>
+:root{
+  --chalk:#EEF0E9; --chalk-muted:#B8C6BE; --chalk-line:#8FA59A; --accent:#E6D9A6; --on-accent:#26261C; --stick:#F1EEE4; --divider:#4D6A5F;
+  --focus:#26332E; --bg:#E4E7E1; --ink:#26332E; --muted:#55635D; --line:#75837C; --frame:#8C7A66; --ledge:#766654; --board:#2F4A40; --well:#29423A;
+  --empty:#C6CEC8; --dot-on:#3F5A4F; --pick-on:#2F4A40; --pick-on-text:#EEF0E9; --pick-bg:#F3F5F1;
+  --cell-line:#45625A; --fill1:#557064; --fill2:#8AA195; --fill3:#DDE3DB;
+  --row-later:#93A69C; --blank:#5C7A6E; --stage-on:#2F4A40; --stage-off:#C6CEC8; --legend-line:#6F887D; --set-bg:#EEF1EC; --set-line:#9AA7A0; --rule:#C6CEC8;
+  --smudge:radial-gradient(ellipse at 28% 22%, rgba(255,255,255,0.045), transparent 60%), radial-gradient(ellipse at 76% 82%, rgba(255,255,255,0.03), transparent 55%);
+  --chalk-font:'Patrick Hand','Comic Sans MS',cursive;
+  --ui-font:'Atkinson Hyperlegible',Verdana,sans-serif;
+}
+:root[data-dim]{
+  --focus:#E6D9A6; --bg:#171C1A; --ink:#DCE3DF; --muted:#A3AEA9; --line:#4A5550; --frame:#5E5244; --ledge:#4E4337; --board:#263B34; --well:#20322C;
+  --empty:#353F3B; --dot-on:#C9BF95; --pick-on:#C9BF95; --pick-on-text:#171C1A; --pick-bg:#232B28;
+  --cell-line:#3A5249; --fill1:#4A6359; --fill2:#7F978C; --fill3:#D7DED6;
+  --row-later:#7F978C; --blank:#4A6359; --stage-on:#C9BF95; --stage-off:#353F3B; --legend-line:#4A6359; --set-bg:#232B28; --set-line:#4A5550; --rule:#353F3B;
+}
+:root[data-plain]{--chalk-font:'Atkinson Hyperlegible',Verdana,sans-serif}
+*{box-sizing:border-box;animation:none!important;transition:none!important}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui-font)}
+button,input{font:inherit}
+/* tapping quickly on a tablet never zooms the page */
+button,input,a{touch-action:manipulation}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.board :focus-visible{outline-color:#F2E7B8}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+a{color:var(--muted);text-underline-offset:4px}
+a:hover{color:var(--ink)}
+.page{min-height:100vh;display:flex;flex-direction:column}
+header{width:100%;margin:0 auto;padding:24px 20px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap}
+header .label{font-size:16px;color:var(--muted)}
+.title{font-size:18px;font-weight:700;color:var(--ink);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.title:hover{text-decoration:underline;color:var(--ink)}
+.level{display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;padding:6px 14px;border-radius:12px;border:2px solid var(--line);background:var(--pick-bg);color:var(--ink);line-height:1.2}
+.level b{font-size:16px}
+.level span{font-size:14px;color:var(--muted)}
+.levels{list-style:none;margin:0;padding:0;width:100%;max-width:520px;display:flex;flex-direction:column;gap:10px;text-align:left}
+.levels li{display:grid;grid-template-columns:44px 1fr;gap:4px 14px;align-items:center;padding:10px 14px;border-radius:12px;border:2px solid transparent}
+.levels li .n{grid-row:span 2;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--chalk-font);font-size:24px;border:2px solid var(--chalk-line);color:var(--chalk-muted)}
+.levels li .name{font-family:var(--chalk-font);font-size:26px;line-height:1.1;color:var(--chalk-muted)}
+.levels li .what{font-size:15px;color:var(--chalk-muted)}
+.levels li.done .n{background:var(--fill2);border-color:var(--fill2);color:var(--board)}
+.levels li.done .name{color:var(--chalk)}
+.levels li.here{border-color:var(--accent);border-style:dashed}
+.levels li.here .n{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.levels li.here .name{color:var(--accent)}
+.levels li.here .what{color:var(--chalk)}
+nav{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+nav a{min-height:44px;display:inline-flex;align-items:center;font-size:16px}
+.dots{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.dots span{width:10px;height:10px;border-radius:50%;background:var(--empty)}
+.dots span.on{background:var(--dot-on)}
+main{flex:1;display:flex;justify-content:center;padding:8px 16px 48px}
+.wrap{width:100%;display:flex;flex-direction:column}
+.board{border:12px solid var(--frame);border-radius:18px;background-color:var(--board);background-image:var(--smudge);color:var(--chalk)}
+.ledge{height:12px;margin:0 28px;border-radius:0 0 8px 8px;background:var(--ledge);display:flex;align-items:flex-start;justify-content:flex-end;padding-right:64px}
+.ledge span{width:44px;height:8px;margin-top:-3px;border-radius:4px;background:var(--stick)}
+.chalk{font-family:var(--chalk-font)}
+.fact{font-family:var(--chalk-font);line-height:1;display:flex;align-items:baseline;justify-content:center;gap:.32em;flex-wrap:nowrap;white-space:nowrap}
+.fact .op{color:var(--chalk-muted)}
+.slot{display:inline-block;min-width:1.1em;text-align:left}
+.msg{margin:0;min-height:34px;font-family:var(--chalk-font);font-size:26px;line-height:1.4;color:var(--chalk)}
+.hint{margin:0;font-family:var(--chalk-font);font-size:40px;line-height:1.2;color:var(--accent)}
+.lines{font-family:var(--chalk-font);font-size:30px;line-height:1.3;color:var(--chalk-muted)}
+.answer-form{width:100%;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.answer-form input{width:160px;min-height:60px;padding:0 12px;border-radius:12px;border:2px dashed var(--chalk-line);background:var(--well);color:var(--chalk);font-family:var(--chalk-font);font-size:36px;text-align:center}
+.answer-form .btn{min-height:60px;font-size:18px}
+.answer-form .btn.line{font-size:17px;padding:0 20px;display:inline-flex;align-items:center;gap:8px}
+.btn{min-height:56px;padding:0 28px;border:0;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer;background:var(--accent);color:var(--on-accent)}
+.btn.line{background:transparent;border:2px solid var(--chalk-line);color:var(--chalk);font-weight:400;font-size:18px;padding:0 22px}
+.btn.line[aria-pressed="true"]{background:var(--well)}
+.link{min-height:44px;padding:0 16px;border:0;background:transparent;font-family:var(--chalk-font);font-size:22px;cursor:pointer;color:var(--chalk-muted);text-decoration:underline;text-underline-offset:5px}
+.practice .board{padding:32px 32px 40px;min-height:440px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;text-align:center}
+.stack{width:100%;display:flex;flex-direction:column;align-items:center;gap:24px}
+.note{margin:0;font-family:var(--chalk-font);font-size:24px;color:var(--chalk-muted)}
+.tbl{display:flex;flex-wrap:wrap;align-items:stretch;width:100%;text-align:left}
+.tbl-list{list-style:none;margin:0;padding:0 32px 0 0;flex:0 0 220px;display:flex;flex-direction:column;gap:4px;border-right:2px solid var(--divider)}
+.tbl-list li{min-height:44px;display:flex;align-items:center;gap:8px;font-family:var(--chalk-font);font-size:27px;line-height:1.2;white-space:nowrap;color:var(--row-later)}
+.tbl-list li.done{color:var(--chalk)}
+.tbl-list li.cur{color:var(--accent)}
+.tbl-list li.known{color:var(--chalk-muted)}
+.tbl-list .arrow{width:16px;flex:none;display:inline-flex;justify-content:center}
+.tbl-list .blank{display:inline-block;width:56px;height:.8em;border-bottom:2px dotted var(--blank)}
+.tbl-focus{flex:1 1 360px;min-width:0;padding:16px 0 24px 40px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:36px;text-align:center}
+/* short screens (iPad landscape, laptops): a tighter list, and the fact and answer
+   box stay near the top where an on-screen keyboard won't cover them */
+@media (max-height:900px) and (min-width:641px){
+  .tbl-list li{min-height:36px;font-size:24px}
+  .tbl-focus{gap:24px;padding-top:4px}
+  .tbl-focus .fact{font-size:min(96px,16vw)!important}
+}
+@media (max-width:640px){.tbl-focus{order:1;padding:8px 0 24px}.tbl-list{order:2;flex-basis:100%;border-right:0;padding:20px 0 0;border-top:2px solid var(--divider)}}
+.walk .board{padding:28px 32px}
+.picker{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.picker button{min-width:48px;min-height:48px;padding:0 10px;border-radius:10px;font-size:18px;cursor:pointer;border:2px solid var(--line);background:var(--pick-bg);color:var(--ink)}
+.picker button[aria-pressed="true"]{border-color:var(--pick-on);background:var(--pick-on);color:var(--pick-on-text);font-weight:700;text-decoration:underline;text-underline-offset:4px}
+.progress{max-width:840px}
+.progress .board{padding:36px 32px;display:flex;flex-direction:column;gap:28px}
+.progress h1{margin:0;font-family:var(--chalk-font);font-size:48px;font-weight:400;line-height:1}
+.legend{display:flex;gap:8px 24px;flex-wrap:wrap;font-size:14px;color:var(--chalk-muted)}
+.legend span.k{display:inline-flex;align-items:center;gap:8px}
+.cellbox{position:relative;overflow:hidden;border:1px solid var(--cell-line)}
+.fill{position:absolute;left:0;right:0;bottom:0}
+.fill.l1{height:34%;background:var(--fill1);border-top:2px solid var(--chalk)}
+.fill.l2{height:67%;background:var(--fill2);border-top:2px solid var(--chalk)}
+.fill.l3{height:100%;background:var(--fill3)}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px}
+.grid .h{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-family:var(--chalk-font);font-size:clamp(13px,2.4vw,20px);color:var(--chalk-muted)}
+.grid .cellbox{aspect-ratio:1;border-radius:6px}
+.bars{display:flex;flex-direction:column;gap:12px;padding-top:4px}
+.bars div{display:grid;grid-template-columns:120px minmax(0,1fr) 32px;align-items:center;gap:16px;font-size:15px}
+.bars .track{height:6px;border-radius:3px;background:var(--well);overflow:hidden;display:block}
+.bars .track i{display:block;height:100%;border-radius:4px}
+.bars b{text-align:right;font-family:var(--chalk-font);font-size:22px;font-weight:400}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row a.btn{min-height:56px;display:inline-flex;align-items:center;text-decoration:none;font-size:18px}
+.row .btn{min-height:56px}
+.extras{margin-top:28px;display:flex;flex-direction:column;gap:12px;font-size:16px;color:var(--muted)}
+.extras .row button{min-height:44px;padding:0 16px;border-radius:10px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;font-size:16px}
+.extras .row button[aria-pressed="true"]{background:var(--pick-on);border-color:var(--pick-on);color:var(--pick-on-text)}
+dialog{background:var(--bg);color:var(--ink);border:2px solid var(--line);border-radius:12px;max-width:560px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog textarea{width:100%;min-height:90px;border:2px solid var(--line);border-radius:8px;padding:8px;font-family:monospace;font-size:13px;background:var(--pick-bg);color:var(--ink)}
+dialog button{min-height:44px;padding:0 16px;border-radius:10px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+/* top bar: name (home link) on the left, level and its stages on the right */
+.title{font-size:17px;font-weight:700;letter-spacing:.01em;color:var(--ink);text-decoration:none;min-height:44px;display:inline-flex;align-items:center;gap:.35em}
+.title span{font-weight:400;color:var(--muted)}
+.title:hover{text-decoration:underline}
+.where{display:flex;align-items:center;gap:16px}
+.where p{margin:0;font-size:15px;font-weight:700;white-space:nowrap}
+.where p span{font-weight:400;color:var(--muted)}
+.where .sub{font-size:14px;font-weight:400;color:var(--muted);white-space:normal}
+.stages{list-style:none;margin:0;padding:0;display:flex;gap:6px}
+.stages li{display:flex;flex-direction:column;gap:6px;min-width:56px;font-size:13px;color:var(--muted)}
+.stages li::before{content:"";display:block;height:4px;border-radius:2px;background:var(--stage-off)}
+.stages li.on::before{background:var(--stage-on)}
+.stages li[aria-current]{font-weight:700;color:var(--ink)}
+/* this set of ten, inside the board */
+.setbar{display:flex;gap:4px;width:100%;max-width:280px;margin:0 auto}
+.setbar span{flex:1;height:4px;border-radius:2px;background:var(--cell-line)}
+.setbar span.on{background:var(--accent)}
+.group{display:flex;flex-direction:column;align-items:center;gap:16px}
+.steps{list-style:none;margin:0;padding:14px 28px;border-radius:12px;background:var(--well);font-family:var(--chalk-font);font-size:28px;line-height:1.4;color:var(--chalk-muted)}
+.steps b{font-weight:400;color:var(--chalk)}
+.msg.big{font-size:30px;line-height:1.2}
+.foot{width:100%;margin:0 auto;padding:8px 20px 48px;display:flex;flex-direction:column;gap:20px;font-size:15px}
+.foot nav{gap:24px}
+.foot a{color:var(--muted)}
+.settings{display:flex;gap:8px;flex-wrap:wrap}
+.settings button{min-height:44px;padding:0 16px;border-radius:10px;border:1.5px solid var(--set-line);background:var(--set-bg);color:var(--ink);font-size:15px;cursor:pointer}
+.settings button[aria-pressed="true"]{background:var(--pick-on);border-color:var(--pick-on);color:var(--pick-on-text)}
+details.tools{border-top:1px solid var(--rule);padding-top:16px;font-size:14px;color:var(--muted)}
+details.tools summary{min-height:32px;font-weight:700;color:var(--ink);cursor:pointer}
+</style>
+</head>
+<body>
+<div class="page" id="app"></div>
+
+<dialog id="saveDlg" aria-labelledby="saveTitle">
+  <h2 id="saveTitle">Move to another device</h2>
+  <p>Your progress is kept in this browser. Copy this code, then paste it on the other device.</p>
+  <textarea id="saveCode" readonly aria-label="Your save code"></textarea>
+  <p>Paste a code from another device:</p>
+  <textarea id="loadCode" aria-label="Paste a save code"></textarea>
+  <p id="loadMsg" role="status"></p>
+  <div class="row"><button id="copyCode" type="button">Copy my code</button><button id="loadBtn" type="button">Use pasted code</button><button id="closeSave" type="button">Close</button></div>
+</dialog>
+
+<script>
+// Mental Math Masters engine: pure logic, no DOM, no storage.
+// Inlined into index.html by build.py and loaded directly by the Node tests.
+//
+// The course: four modules, then a final check.
+//   Learn     fill in each table in order (known facts marked), then its trick
+//   Practice  the module's tables, shuffled
+//   Test      any table learned so far, both orders, with fix-it steps
+//   Gate      20 of the last 25 test answers right, and every new fact right once
+//   Final     all 66 facts, random order, pass at 60
+// Separately, every fact keeps a spaced-repetition box (every day, every 3 days,
+// weekly, then chalked in). The boxes fill the progress board and steer which
+// facts the test asks; they never block a gate.
+const Engine = (() => {
+  const MODULES = [[2, 10, 5], [3, 4, 6], [7, 8, 9], [11, 12]];
+  const WINDOW = 25, GATE = 20, FINAL_PASS = 60;
+  const INTERVAL = { 1: 1, 2: 3, 3: 7 };
+  const MASTERED = 4;
+
+  const key = (a, b) => (a <= b ? `${a}x${b}` : `${b}x${a}`);
+  const parts = (k) => k.split('x').map(Number);
+  const ALL = [];
+  for (let a = 2; a <= 12; a++) for (let b = a; b <= 12; b++) ALL.push(key(a, b));
+
+  // Facts each module brings in: any fact with one of its tables, not already met.
+  const NEW = [];
+  const MODULE_OF = {};
+  MODULES.forEach((tables, m) => {
+    NEW[m] = [];
+    for (const t of tables) {
+      for (let n = 2; n <= 12; n++) {
+        const k = key(t, n);
+        if (!(k in MODULE_OF)) { MODULE_OF[k] = m; NEW[m].push(k); }
+      }
+    }
+  });
+  const factsUpTo = (m) => ALL.filter((k) => MODULE_OF[k] <= m);
+  // Facts known before walking table t in module m (earlier modules, earlier tables here).
+  function knownBefore(m, t) {
+    const tabs = MODULES.slice(0, m).flat().concat(MODULES[m].slice(0, MODULES[m].indexOf(t)));
+    return (k) => { const [a, b] = parts(k); return tabs.includes(a) || tabs.includes(b); };
+  }
+
+  const addDays = (d, n) => {
+    const [y, m, dd] = d.split('-').map(Number);
+    const x = new Date(y, m - 1, dd + n);
+    return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+  };
+
+  // ---------- words on the board ----------
+  // Learn hint: always adds up the first number. 2 × 3 is 2 + 2 + 2.
+  const hint = (n, b) => Array.from({ length: b }, () => n).join(' + ');
+  // The trick for each table, shown after filling it in.
+  function trick(t) {
+    const b = t === 7 ? 8 : 7;
+    const T = {
+      2: ['Twos are doubles.', `2 × ${b} = ${b} + ${b} = ${2 * b}`],
+      10: ['Tens: add a zero.', `10 × ${b} = ${b}0`],
+      5: ['Fives are half of tens.', `5 × ${b} = half of ${10 * b} = ${5 * b}`],
+      3: ['Threes: the twos, plus one more.', `3 × ${b} = ${2 * b} + ${b} = ${3 * b}`],
+      4: ['Fours: double the twos.', `4 × ${b} = ${2 * b} doubled = ${4 * b}`],
+      6: ['Sixes: the fives, plus one more.', `6 × ${b} = ${5 * b} + ${b} = ${6 * b}`],
+      7: ['Sevens: the fives plus the twos.', `7 × ${b} = ${5 * b} + ${2 * b} = ${7 * b}`],
+      8: ['Eights: double the fours.', `8 × ${b} = ${4 * b} doubled = ${8 * b}`],
+      9: ['Nines: the tens, minus one.', `9 × ${b} = ${10 * b} − ${b} = ${9 * b}`],
+      11: ['Elevens: repeat the digit, up to 9.', `11 × ${b} = ${11 * b}`],
+      12: ['Twelves: the tens plus the twos.', `12 × ${b} = ${10 * b} + ${2 * b} = ${12 * b}`],
+    }[t];
+    return { line: T[0], example: T[1] };
+  }
+  // Fix-it: build the fact from ones already known, using the first number's trick.
+  // 7 × 8 → 5 × 8 = 40, plus 2 more 8s = 56.
+  function build(a, b) {
+    const p = a * b;
+    switch (a) {
+      case 2: return [`${b} + ${b} = ${p}`];
+      case 10: return [`${b} with a zero = ${p}`];
+      case 5: return [`10 × ${b} = ${10 * b}`, `half of that = ${p}`];
+      case 3: return [`2 × ${b} = ${2 * b}`, `plus one more ${b} = ${p}`];
+      case 4: return [`2 × ${b} = ${2 * b}`, `doubled = ${p}`];
+      case 6: return [`5 × ${b} = ${5 * b}`, `plus one more ${b} = ${p}`];
+      case 7: return [`5 × ${b} = ${5 * b}`, `plus 2 more ${b}s = ${p}`];
+      case 8: return [`4 × ${b} = ${4 * b}`, `doubled = ${p}`];
+      case 9: return [`10 × ${b} = ${10 * b}`, `minus one ${b} = ${p}`];
+      case 11: return b <= 9 ? [`repeat the ${b}: ${p}`] : [`10 × ${b} = ${10 * b}`, `plus one more ${b} = ${p}`];
+      case 12: return [`10 × ${b} = ${10 * b}`, `plus 2 × ${b} = ${2 * b}`, `together ${p}`];
+    }
+    return [`${a} × ${b} = ${p}`];
+  }
+
+  // Which tables count as learned right now: everything up to this module, or all
+  // of them once the modules are done.
+  const learnedTables = (s) => (s.phase === 'learn' ? MODULES.slice(0, s.module).flat() : MODULES.slice(0, s.module + 1).flat());
+  // Build from a table the learner has actually learned: 7 × 8 uses the sevens if
+  // they're learned; 9 × 2 in Module 1 is built as 2 × 9 instead.
+  function buildFor(s, a, b) {
+    const learned = s.phase === 'final' || s.phase === 'review' || s.phase === 'done' ? MODULES.flat() : learnedTables(s);
+    if (learned.includes(a) || !learned.includes(b)) return { table: a, lines: build(a, b) };
+    return { table: b, lines: [`same as ${b} × ${a}`].concat(build(b, a)) };
+  }
+
+  // ---------- state ----------
+  function freshState(today) {
+    const s = { v: 3, created: today, facts: {}, cur: null, finalBest: null };
+    startModule(s, 0);
+    return s;
+  }
+  function startModule(s, m) {
+    s.module = m; s.phase = 'learn'; s.q = []; s.sched = [];
+    s.learn = { ti: 0 };
+    s.walk = null; s.fixWalk = null;
+    s.test = { count: 0, window: [], newRight: [], misses: {}, wrongRun: 0, recent: [] };
+  }
+
+  // Spaced-repetition boxes. Only the first attempt of the day on a due fact moves
+  // it up; a miss always sends it back to Box 1.
+  function record(s, k, correct, today, opts = {}) {
+    let f = s.facts[k];
+    if (!f) f = s.facts[k] = { box: 1, due: addDays(today, 1), introduced: today, misses: 0, seenOn: null, promotedOn: null };
+    const firstToday = f.seenOn !== today;
+    f.seenOn = today;
+    if (!correct) { f.misses++; f.box = 1; f.due = addDays(today, 1); f.promotedOn = null; return; }
+    if (opts.noPromote) return;
+    if (firstToday && f.box < MASTERED && f.due <= today && f.promotedOn !== today && f.introduced !== today) {
+      f.box++; f.promotedOn = today;
+      if (f.box === MASTERED) { f.masteredOn = today; f.due = null; } else f.due = addDays(today, INTERVAL[f.box]);
+    }
+  }
+  const boxOf = (s, k) => (s.facts[k] ? s.facts[k].box : 0);
+
+  function shuffle(arr, rng) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  // A question screen. Without a given order, it's shown either way round.
+  function q(k, mode, rng, a, b) {
+    if (a == null) { [a, b] = parts(k); if (rng() < 0.5) [a, b] = [b, a]; }
+    return { kind: 'q', mode, k, a, b };
+  }
+  const tableAll = (t) => { const f = {}; for (let b = 1; b <= 12; b++) f[b] = t * b; return f; };
+
+  // ---------- what comes next ----------
+  function current(s, today, rng) {
+    if (!s.cur) s.cur = nextScreen(s, today, rng);
+    return s.cur;
+  }
+  function nextScreen(s, today, rng) {
+    if (s.q.length) return s.q.shift();
+    const m = s.module;
+    switch (s.phase) {
+      case 'learn': {
+        const tables = MODULES[m];
+        if (s.learn.ti >= tables.length) { s.phase = 'practice'; s.q = practiceList(s, rng); return nextScreen(s, today, rng); }
+        const t = tables[s.learn.ti];
+        if (!s.walk || s.walk.t !== t) {
+          const known = knownBefore(m, t);
+          const pre = {};
+          for (let b = 1; b <= 12; b++) if ((b === 1 && m > 0) || (b > 1 && known(key(t, b)))) pre[b] = t * b;
+          s.walk = { t, filled: { ...pre }, known: Object.keys(pre).map(Number) };
+        }
+        for (let b = 1; b <= 12; b++) if (s.walk.filled[b] == null) return { kind: 'walk', t, b };
+        // table filled in: the pattern question (Module 1 only), then the trick
+        s.learn.ti++;
+        s.walk = null;
+        if (m === 0) { s.q.push({ kind: 'trick', t }); return { kind: 'pattern', t }; }
+        return { kind: 'trick', t };
+      }
+      case 'practice':
+        s.phase = 'test';
+        s.firstTest = true;
+        return nextScreen(s, today, rng);
+      case 'test': {
+        const due = s.sched.findIndex((x) => x.at <= s.test.count);
+        if (due >= 0) return s.sched.splice(due, 1)[0].screen;
+        const sc = q(pickTest(s, today, rng), 'test', rng);
+        if (s.firstTest) { sc.note = 'test'; s.firstTest = false; }
+        return sc;
+      }
+      case 'final': {
+        if (!s.final.queue) beginFinal(s, rng);
+        if (s.final.queue.length) return s.final.queue.shift();
+        const right = s.final.results.filter(Boolean).length, of = s.final.results.length;
+        const passed = right >= FINAL_PASS;
+        s.finalBest = Math.max(s.finalBest || 0, right);
+        if (passed) { s.phase = 'done'; return { kind: 'finalResult', right, of, passed }; }
+        // practise the ones that slipped, then offer the check again
+        s.phase = 'review';
+        s.q = s.final.missed.map((k) => q(k, 'review', rng));
+        s.q.push({ kind: 'finalReady' });
+        return { kind: 'finalResult', right, of, passed };
+      }
+      case 'review':
+      case 'done': {
+        // keep facts sharp: shaky ones come up more
+        const pool = ALL.map((k) => ({ k, w: boxOf(s, k) === MASTERED ? 1 : 5 - boxOf(s, k) }));
+        let r = rng() * pool.reduce((t, x) => t + x.w, 0);
+        for (const x of pool) { r -= x.w; if (r <= 0) return q(x.k, 'review', rng); }
+        return q(ALL[0], 'review', rng);
+      }
+    }
+    return null;
+  }
+
+  function practiceList(s, rng) {
+    const m = s.module;
+    let list = shuffle(NEW[m], rng).slice(0, 20);
+    if (list.length < 12) {
+      const extra = shuffle(ALL.filter((k) => !list.includes(k) && parts(k).some((x) => MODULES[m].includes(x))), rng);
+      list = list.concat(extra.slice(0, 12 - list.length));
+    }
+    const out = list.map((k) => q(k, 'practice', rng));
+    out[0].note = 'practice';
+    return out;
+  }
+
+  // The test asks new facts not yet answered right first (two in every three
+  // questions), so the gate never waits on chance; the rest are weighted toward
+  // missed, due and newer facts.
+  function pickTest(s, today, rng) {
+    const m = s.module, T = s.test;
+    const pool = factsUpTo(m).filter((k) => !T.recent.includes(k));
+    const needed = pool.filter((k) => MODULE_OF[k] === m && !T.newRight.includes(k));
+    if (needed.length && (T.count % 3 !== 2 || pool.length === needed.length)) return needed[Math.floor(rng() * needed.length)];
+    const w = (k) => {
+      let x = MODULE_OF[k] === m ? 2 : 1;
+      if (T.misses[k]) x += 3;
+      const f = s.facts[k];
+      if (f && f.box < MASTERED && f.due <= today) x += 2;
+      return x;
+    };
+    let total = 0; for (const k of pool) total += w(k);
+    let r = rng() * total;
+    for (const k of pool) { r -= w(k); if (r <= 0) return k; }
+    return pool[pool.length - 1];
+  }
+
+  // ---------- answering ----------
+  // Call once, on the first attempt at the current screen. Returns what the
+  // learner should see next.
+  function attempt(s, correct, today, rng) {
+    const c = s.cur, out = { correct };
+    if (c.kind === 'walk') {
+      const k = c.b > 1 ? key(c.t, c.b) : null;
+      if (k && (!correct || !s.facts[k])) record(s, k, correct, today, { noPromote: true });
+      return out;
+    }
+    if (c.kind !== 'q') return out;
+    if (c.mode !== 'retry' && c.mode !== 'easy') record(s, c.k, correct, today);
+    const bf = buildFor(s, c.a, c.b);
+    out.build = bf.lines;
+    if (c.mode === 'practice' && !correct) s.q.splice(Math.min(4, s.q.length), 0, q(c.k, 'practice', rng, c.b, c.a));
+    // a new fact answered right in practice counts as "right at least once"
+    if (c.mode === 'practice' && correct && MODULE_OF[c.k] === s.module && !s.test.newRight.includes(c.k)) s.test.newRight.push(c.k);
+    if (c.mode === 'review' && !correct && s.phase === 'review') s.q.splice(Math.max(0, Math.min(3, s.q.length - 1)), 0, q(c.k, 'review', rng, c.b, c.a));
+    if (c.mode === 'final') { s.final.results.push(correct); if (!correct) s.final.missed.push(c.k); }
+    if (c.mode === 'test') testAnswer(s, c, correct, rng, out, bf.table);
+    return out;
+  }
+
+  function testAnswer(s, c, correct, rng, out, table) {
+    const T = s.test, m = s.module;
+    T.count++;
+    T.window.push(correct ? 1 : 0);
+    if (T.window.length > WINDOW) T.window.shift();
+    T.recent.push(c.k); if (T.recent.length > 3) T.recent.shift();
+    if (correct) {
+      T.wrongRun = 0;
+      if (MODULE_OF[c.k] === m && !T.newRight.includes(c.k)) T.newRight.push(c.k);
+      if (gateMet(s)) { passModule(s); out.moduleDone = m; }
+      return;
+    }
+    T.wrongRun++;
+    T.misses[c.k] = (T.misses[c.k] || 0) + 1;
+    if (T.misses[c.k] >= 2) {
+      // missed again: fill out the learned table up to it; its last rung is the re-ask
+      const other = table === c.a ? c.b : c.a;
+      for (let b = 1; b <= other; b++) s.q.push({ kind: 'walk', t: table, b, fix: true, upTo: other });
+      out.fillOut = true;
+    } else s.q.push(q(c.k, 'retry', rng, c.a, c.b)); // ask it again right away
+    // the flip a few problems later, the same again later still
+    s.sched.push({ at: T.count + 3, screen: q(c.k, 'test', rng, c.b, c.a) });
+    s.sched.push({ at: T.count + 8, screen: q(c.k, 'test', rng, c.a, c.b) });
+    if (T.wrongRun >= 3) {
+      // three wrong in a row: a quick easy run to reset, then back to the test
+      T.wrongRun = 0;
+      for (let i = 0; i < 4; i++) {
+        const t = rng() < 0.5 ? 2 : 10, n = 2 + Math.floor(rng() * 9);
+        const e = q(key(t, n), 'easy', rng, t, n);
+        if (i === 0) e.note = 'easy';
+        s.q.push(e);
+      }
+      out.easyRun = true;
+    }
+  }
+
+  function gateMet(s) {
+    const T = s.test;
+    return T.window.length >= WINDOW && T.window.reduce((a, b) => a + b, 0) >= GATE && NEW[s.module].every((k) => T.newRight.includes(k));
+  }
+  function passModule(s) {
+    const done = s.module;
+    if (done + 1 < MODULES.length) startModule(s, done + 1);
+    else { s.phase = 'final'; s.q = []; s.sched = []; s.final = { queue: null, results: [], missed: [] }; }
+    s.q.unshift({ kind: 'moduleDone', m: done });
+  }
+  function beginFinal(s, rng) {
+    s.phase = 'final';
+    s.final = { queue: shuffle(ALL, rng).map((k) => q(k, 'final', rng)), results: [], missed: [] };
+    s.final.queue[0].note = 'final';
+  }
+
+  // Call when the learner is finished with the current screen.
+  function finish(s, rng) {
+    const c = s.cur;
+    if (c && c.kind === 'walk') {
+      if (c.fix) {
+        if (!s.fixWalk || s.fixWalk.t !== c.t || c.b === 1) s.fixWalk = { t: c.t, filled: {} };
+        s.fixWalk.filled[c.b] = c.t * c.b;
+        if (c.b === c.upTo) s.fixWalk = null;
+      } else if (s.walk) s.walk.filled[c.b] = c.t * c.b;
+    }
+    if (c && c.kind === 'finalReady') beginFinal(s, rng);
+    s.cur = null;
+  }
+
+  // ---------- read-outs ----------
+  function status(s) {
+    const T = s.test;
+    return {
+      module: s.module, phase: s.phase, tables: MODULES[s.module],
+      windowRight: T.window.reduce((a, b) => a + b, 0), windowSize: T.window.length,
+      newLeft: NEW[s.module].filter((k) => !T.newRight.includes(k)).length, newTotal: NEW[s.module].length,
+      finalBest: s.finalBest, finalDone: s.final ? s.final.results.length : 0,
+    };
+  }
+  // The ladder beside a walk screen: rungs filled so far, and which were already known.
+  function ladder(s, c) {
+    if (c.fix) return { filled: s.fixWalk && s.fixWalk.t === c.t && c.b > 1 ? s.fixWalk.filled : {}, known: [], upTo: c.upTo };
+    return { filled: s.walk ? s.walk.filled : {}, known: s.walk ? s.walk.known : [], upTo: 12 };
+  }
+  // Tester shortcut: pass the current module as if its gate was met.
+  function devPass(s, today) {
+    if (s.phase === 'final' || s.phase === 'review' || s.phase === 'done') return false;
+    for (const k of NEW[s.module]) if (!s.facts[k]) record(s, k, true, today, { noPromote: true });
+    passModule(s); s.cur = null;
+    return true;
+  }
+
+  return {
+    MODULES, NEW, MODULE_OF, ALL, MASTERED, WINDOW, GATE, FINAL_PASS,
+    key, parts, addDays, hint, trick, build, buildFor, freshState, record, boxOf,
+    current, attempt, finish, status, ladder, gateMet, devPass,
+  };
+})();
+if (typeof module !== 'undefined') module.exports = Engine;
+
+</script>
+<script>
+(() => {
+const E = Engine;
+const app = document.getElementById('app');
+const STORE = 'mm-calm-v3', PREFS = 'mm-calm-prefs', DEVKEY = 'mm-calm-dev-offset';
+const DEV = false;
+const SET = 10;
+
+// ---------- storage: may be missing or blocked, so never trusted ----------
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+const devOffset = () => (DEV ? Number(store.get(DEVKEY) || 0) : 0);
+function today() {
+  const d = new Date(); d.setDate(d.getDate() + devOffset());
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+let S = null;
+try { S = JSON.parse(store.get(STORE) || 'null'); } catch {}
+if (!S || S.v !== 3) S = E.freshState(today());
+const save = () => store.set(STORE, JSON.stringify(S));
+let prefs = { dim: false, plain: false };
+try { prefs = Object.assign(prefs, JSON.parse(store.get(PREFS) || '{}')); } catch {}
+function applyPrefs() {
+  document.documentElement.toggleAttribute('data-dim', !!prefs.dim);
+  document.documentElement.toggleAttribute('data-plain', !!prefs.plain);
+  store.set(PREFS, JSON.stringify(prefs));
+}
+applyPrefs();
+const rng = Math.random;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const $ = (sel) => app.querySelector(sel);
+const ledge = '<div class="ledge" aria-hidden="true"><span></span></div>';
+const arrow = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l6 5-6 5"></path></svg>';
+const micIcon = '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg>';
+const theNs = (t) => `the ${t}s`;
+const TheNs = (t) => `The ${t}s`;
+
+function factHtml(a, b, slot, revealed, size) {
+  // scales down on narrow screens so the fact never wraps
+  return `<div class="fact" style="font-size:min(${size}px, 16vw)"><span>${a}</span><span class="op">×</span><span>${b}</span><span class="op">=</span><span class="slot" style="color:${revealed ? 'var(--accent)' : 'var(--chalk-muted)'}">${slot}</span></div>`;
+}
+function answerForm(label) {
+  return `<form class="answer-form" id="ansForm" autocomplete="off">
+    <label for="answer" class="sr">${esc(label)}</label>
+    <input id="answer" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off">
+    <button type="submit" class="btn">Check</button>
+    ${SR ? `<button type="button" class="btn line" id="mic" aria-pressed="${voiceOn}">${micIcon}<span>${voiceOn ? 'Listening' : 'Speak'}</span></button>` : ''}
+  </form>`;
+}
+// Repeated addition gets smaller chalk as it gets longer, and wraps to fit.
+function hintHtml(a, b) {
+  const size = b <= 4 ? 40 : b <= 8 ? 32 : 26;
+  return `<p class="hint" role="status" style="font-size:${size}px;max-width:16em">${esc(E.hint(a, b))}</p>`;
+}
+// The table as a list: filled rungs bright, already-known rungs marked, the
+// current one in yellow with an arrow, later ones a dotted blank.
+function ladderRows(t, cur, done, known = [], upTo = 12) {
+  let rows = '';
+  for (let b = 1; b <= upTo; b++) {
+    const isCur = b === cur, isDone = done[b] != null, isKnown = known.includes(b);
+    const mark = isCur ? arrow : isKnown ? '<span aria-hidden="true">✓</span>' : '';
+    rows += `<li class="${isCur ? 'cur' : isKnown ? 'known' : isDone ? 'done' : ''}" ${isCur ? 'aria-current="step"' : ''}><span class="arrow" aria-hidden="true">${mark}</span><span>${t} × ${b} =</span>${isDone ? `<span>${t * b}</span>${isKnown ? '<span class="sr">already known</span>' : ''}` : isCur ? '<span>?</span>' : '<span class="blank" aria-label="not yet"></span>'}</li>`;
+  }
+  return rows;
+}
+
+// ---------- speaking an answer ----------
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, voiceOn = false, listening = false, onSpoken = null;
+const WORDS = { zero: 0, one: 1, two: 2, to: 2, too: 2, three: 3, four: 4, for: 4, five: 5, six: 6, seven: 7, eight: 8, ate: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+function parseSpoken(t) {
+  t = t.toLowerCase().replace(/-/g, ' ');
+  if (/\bnext\b/.test(t)) return 'next';
+  if (/\b(show me|not sure|don'?t know|hint)\b/.test(t)) return 'help';
+  const d = t.match(/\d+/g); if (d) return Number(d[d.length - 1]);
+  let cur = 0, seen = false;
+  for (const w of t.split(/\s+/)) {
+    if (w === 'hundred') { cur = (cur || 1) * 100; seen = true; }
+    else if (w in WORDS) { cur += WORDS[w]; seen = true; }
+  }
+  return seen ? cur : null;
+}
+function listen() {
+  if (!SR || !voiceOn || listening) return;
+  try {
+    rec = new SR(); rec.lang = 'en-US'; rec.interimResults = false; rec.maxAlternatives = 3; listening = true;
+    rec.onresult = (e) => {
+      let v = null;
+      for (const alt of e.results[0]) { v = parseSpoken(alt.transcript); if (v != null) break; }
+      if (v != null && onSpoken) onSpoken(v);
+    };
+    rec.onend = () => { listening = false; if (voiceOn) setTimeout(listen, 250); };
+    rec.onerror = (e) => { listening = false; if (e.error === 'not-allowed') { voiceOn = false; render(); } };
+    rec.start();
+  } catch { listening = false; }
+}
+function stopListening() { voiceOn = false; if (rec) try { rec.abort(); } catch {} listening = false; }
+function bindMic() {
+  const m = $('#mic'); if (!m) return;
+  m.addEventListener('click', () => { if (voiceOn) stopListening(); else { voiceOn = true; listen(); } m.setAttribute('aria-pressed', String(voiceOn)); m.querySelector('span').textContent = voiceOn ? 'Listening' : 'Speak'; const i = $('#answer'); if (i) i.focus(); });
+}
+function bindAnswer(submit) {
+  const form = $('#ansForm'), input = $('#answer');
+  input.addEventListener('input', () => { input.value = input.value.replace(/[^0-9]/g, '').slice(0, 3); });
+  form.addEventListener('submit', (e) => { e.preventDefault(); submit(input.value, false); });
+  input.focus({ preventScroll: true });
+  onSpoken = (v) => { if (v === 'help') { const h = $('#showMe'); if (h) h.click(); return; } if (typeof v === 'number') submit(String(v), true); };
+  bindMic(); if (voiceOn) listen();
+}
+
+// ---------- routing ----------
+let view = (location.hash || '#home').slice(1);
+window.addEventListener('hashchange', () => { view = (location.hash || '#home').slice(1); render(); });
+function render() {
+  if (view === 'board') return renderBoard();
+  if (view === 'table') return renderTable();
+  if (view === 'practice') return renderPractice();
+  return renderHome();
+}
+
+// ---------- the four levels ----------
+const LEVELS = [
+  { name: 'The 2s, 10s and 5s', what: 'Doubles, add a zero, half of ten.' },
+  { name: 'The 3s, 4s and 6s', what: 'Built from the 2s and 5s you know.' },
+  { name: 'The 7s, 8s and 9s', what: 'Only 12 new facts left.' },
+  { name: 'The 11s and 12s', what: 'Only 3 new facts.' },
+];
+// Where the learner is right now, for the top right of every page.
+function levelNow() {
+  const st = E.status(S);
+  if (S.phase === 'done') return { main: 'All levels done', sub: 'Final check passed' };
+  if (S.phase === 'final') return { main: 'Final check', sub: `${st.finalDone} of 66` };
+  if (S.phase === 'review') return { main: 'Final check', sub: 'Practising the ones that slipped' };
+  const sub = S.phase === 'test'
+    ? (st.windowSize < E.WINDOW ? `Test: ${st.windowSize} of ${E.WINDOW}` : `Test: ${st.windowRight} of last ${E.WINDOW} right`)
+    : S.phase === 'practice' ? 'Practice' : 'Learn';
+  return { main: `Level ${S.module + 1} of 4`, sub };
+}
+// Every page: the name on the left (always goes home); on the right, the level
+// and its three stages, or the final check.
+function headerHtml(maxw) {
+  const st = E.status(S);
+  let right;
+  if (S.phase === 'final' || S.phase === 'review' || S.phase === 'done') {
+    const lv = levelNow();
+    right = `<p>${esc(lv.main)}</p><p class="sub">${esc(lv.sub)}</p>`;
+  } else {
+    const order = ['learn', 'practice', 'test'], at = order.indexOf(S.phase);
+    const testLabel = S.phase === 'test' ? (st.windowSize < E.WINDOW ? `Test ${st.windowSize}/${E.WINDOW}` : `Test ${st.windowRight}/${E.WINDOW} right`) : 'Test';
+    const stages = ['Learn', 'Practice', testLabel].map((n, i) => `<li class="${i <= at ? 'on' : ''}" ${i === at ? 'aria-current="step"' : ''}>${esc(n)}</li>`).join('');
+    right = `<p>Level ${S.module + 1} <span>of 4</span></p><ol class="stages" aria-label="Level ${S.module + 1} stages">${stages}</ol>`;
+  }
+  return `<header style="max-width:${maxw}px">
+    <a class="title" href="#home" aria-label="Mental Math Master: Times Tables, home">Mental Math Master <span>· Times Tables</span></a>
+    <div class="where">${right}</div>
+  </header>`;
+}
+// The set of ten as a thin bar at the top of the board.
+function setBar() {
+  const n = Math.min(P.done, SET);
+  return `<div class="setbar" role="progressbar" aria-label="This set" aria-valuemin="0" aria-valuemax="${SET}" aria-valuenow="${n}">${Array.from({ length: SET }, (_, i) => `<span class="${i < n ? 'on' : ''}"></span>`).join('')}</div>`;
+}
+
+// ================= PRACTICE =================
+// One screen at a time from the engine: Learn (fill in a table, then its trick),
+// Practice, Test with fix-it steps, and the final check. Sets of ten, then a break.
+const P = { phase: 'ask', tries: 0, msg: '', done: 0, onBreak: false, fix: null };
+const MODULE_NAMES = LEVELS.map((l) => l.name.replace(/^The/, 'the'));
+const NOTES = {
+  practice: () => `${cap(MODULE_NAMES[S.module])}, mixed up.`,
+  test: () => 'Now a test: every table so far, both ways round.',
+  easy: () => 'A few easy ones.',
+  final: () => 'The final check. All 66, mixed up.',
+};
+const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+const screen = () => E.current(S, today(), rng);
+// Learning screens, fix-its and re-asks are never split by a break.
+function holdBreak(c) { return c.kind !== 'q' || c.mode === 'retry' || c.mode === 'easy' || P.phase !== 'ask'; }
+function advance(counted) {
+  E.finish(S, rng); save();
+  if (counted) P.done++;
+  P.phase = 'ask'; P.tries = 0; P.msg = ''; P.fix = null;
+  const c = screen(); save();
+  if (P.done >= SET && !holdBreak(c)) P.onBreak = true;
+  render();
+}
+function resetPractice() { P.phase = 'ask'; P.tries = 0; P.msg = ''; P.done = 0; P.onBreak = false; P.fix = null; }
+
+// Home: a calm hello and one button.
+function renderHome() {
+  const first = !Object.keys(S.facts).length;
+  const head = first ? 'Hi there.' : S.phase === 'done' ? 'You did it.' : 'Welcome back.';
+  const sub = first ? 'We’re going to practice our times tables today.'
+    : S.phase === 'done' ? 'All 66, straight away. Keep them sharp whenever you like.'
+    : S.phase === 'final' || S.phase === 'review' ? 'Today: the final check.'
+    : `Today: Level ${S.module + 1}, ${MODULE_NAMES[S.module]}.`;
+  const label = first ? 'Get started' : S.phase === 'done' ? 'Keep them sharp' : 'I’m ready';
+  app.innerHTML = `
+  ${headerHtml(760)}
+  <main><div class="wrap" style="max-width:760px">
+    <section class="board" style="padding:48px 28px 44px">
+      <div style="max-width:520px;min-height:320px;margin:0 auto;display:flex;flex-direction:column;justify-content:center;gap:40px">
+        <div style="text-align:center;display:flex;flex-direction:column;gap:16px">
+          <h1 class="chalk" style="margin:0;font-size:64px;font-weight:400;line-height:1">${head}</h1>
+          <p class="chalk" style="margin:0;font-size:30px;line-height:1.3;color:var(--chalk-muted)">${esc(sub)}</p>
+        </div>
+        <a href="#practice" class="btn" id="go" style="align-self:center;padding:0 40px;display:inline-flex;align-items:center;text-decoration:none">${label}</a>
+      </div>
+    </section>
+    ${ledge}
+  </div></main>
+  <footer class="foot" style="max-width:760px"><nav aria-label="Pages"><a href="#board">My progress</a></nav></footer>`;
+  $('#go').focus({ preventScroll: true });
+  onSpoken = null;
+}
+
+function renderPractice() {
+  const c = screen(); save();
+  const wide = !P.onBreak && (c.kind === 'walk' || c.kind === 'pattern' || c.kind === 'trick');
+  app.innerHTML = `
+  ${headerHtml(wide ? 1040 : 840)}
+  <main><div class="wrap ${wide ? 'walk' : 'practice'}" style="max-width:${wide ? 1040 : 840}px">
+    ${P.onBreak ? breakHtml() : wide ? ladderScreen(c) : centerScreen(c)}
+    ${ledge}
+  </div></main>`;
+  bindPractice(c);
+}
+
+const big = (t) => `<p class="chalk" style="margin:0;font-size:48px;line-height:1.2">${esc(t)}</p>`;
+const line = (t, muted) => `<p class="chalk" style="margin:0;font-size:26px;line-height:1.4;${muted ? 'color:var(--chalk-muted)' : ''}">${esc(t)}</p>`;
+const btn = (id, label) => `<button type="button" class="btn" id="${id}" style="min-height:56px;padding:0 32px">${esc(label)}</button>`;
+
+function gateLine() {
+  if (S.phase !== 'test') return '';
+  const st = E.status(S);
+  const parts = [];
+  if (st.windowSize) parts.push(st.windowSize < E.WINDOW ? `${st.windowRight} right so far, out of ${st.windowSize}.` : `${st.windowRight} of the last ${E.WINDOW} right.`);
+  if (st.newLeft) parts.push(`${st.newLeft} new ${st.newLeft === 1 ? 'fact' : 'facts'} still to get right once.`);
+  parts.push(`${E.GATE} right out of ${E.WINDOW} opens Level ${S.module + 2 <= 4 ? S.module + 2 : 'the final check'}.`.replace('Level the', 'the'));
+  return line(parts.join(' '));
+}
+function breakHtml() {
+  return `<div class="board"><div class="stack">${big('That’s ten.')}${gateLine()}${line('You can stop here, or do ten more.', true)}
+    <div class="row" style="justify-content:center">${btn('more', 'Ten more')}<a href="#table" class="btn line" style="min-height:56px;display:inline-flex;align-items:center;text-decoration:none">List a table</a></div></div></div>`;
+}
+
+// Walk, pattern and trick screens: the table as a list on the left.
+function ladderScreen(c) {
+  const t = c.t;
+  let lad, right;
+  if (c.kind === 'walk') {
+    const L = E.ladder(S, c), shown = P.phase === 'shown';
+    lad = ladderRows(t, c.b, L.filled, L.known, L.upTo);
+    const note = c.fix && c.b === 1 && P.phase === 'ask' ? `<p class="note">Let’s fill out the ${t}s up to ${t} × ${c.upTo}.</p>` : '';
+    right = `${note}${factHtml(t, c.b, shown ? t * c.b : '?', shown, 104)}
+      ${P.phase === 'hint' ? hintHtml(t, c.b) : ''}
+      <p class="msg" aria-live="polite" style="min-height:32px">${esc(P.msg)}</p>
+      ${answerForm(`${t} times ${c.b}`)}
+      ${P.phase === 'ask' ? `<button type="button" class="link" id="showMe">Give me a hint</button>` : ''}`;
+  } else {
+    const all = {}; for (let b = 1; b <= 12; b++) all[b] = t * b;
+    lad = ladderRows(t, 0, all, [], 12);
+    if (c.kind === 'pattern') right = `${big('What pattern do you see?')}${btn('trickBtn', 'Show me the trick')}`;
+    else { const tr = E.trick(t); right = `${line(tr.line)}<p class="hint" style="font-size:40px">${esc(tr.example)}</p>${btn('next', 'Next')}`; }
+  }
+  return `<section class="board" aria-labelledby="walkTitle"><h1 id="walkTitle" class="sr">The ${t}s</h1>
+    <div class="tbl"><ol class="tbl-list" aria-label="The ${t}s">${lad}</ol><div class="tbl-focus">${right}</div></div></section>`;
+}
+
+// Questions and messages: one thing in the middle of the board.
+function centerScreen(c) {
+  let inner = '';
+  if (c.kind === 'moduleDone') {
+    const nextUp = c.m + 1 < E.MODULES.length ? `Next: Level ${c.m + 2}, ${MODULE_NAMES[c.m + 1]}.` : 'Next: the final check. All 66, mixed up.';
+    inner = `${big(`Level ${c.m + 1} done.`)}${line(nextUp, true)}${btn('next', 'Next')}`;
+  } else if (c.kind === 'finalResult') {
+    inner = `${big(`${c.right} of ${c.of}.`)}${line(c.passed ? 'That’s all of them. Every table, both ways round.' : 'Let’s practise the ones that slipped, then try again.', !c.passed)}${btn('next', 'Next')}`;
+  } else if (c.kind === 'finalReady') {
+    inner = `${big('Ready for the final check?')}${line('All 66 again, mixed up.', true)}${btn('next', 'Start')}`;
+  } else {
+    const ans = c.a * c.b, revealed = P.phase === 'right' || P.phase === 'fix' || P.phase === 'shown';
+    const note = P.phase === 'ask' && P.tries === 0 && c.note && NOTES[c.note] ? `<p class="note">${esc(NOTES[c.note]())}</p>` : '';
+    let help = '';
+    if (P.phase === 'fix' && P.fix) {
+      // the last step's result in bright chalk
+      const steps = P.fix.map((l, i) => i === P.fix.length - 1 ? esc(l).replace(/(\d+)$/, '<b>$1</b>') : esc(l));
+      help = `<ol class="steps" aria-label="Steps">${steps.map((l) => `<li>${l}</li>`).join('')}</ol>`;
+    }
+    const msg = P.phase === 'fix' ? `<p class="msg big" role="status">${esc(P.msg)}</p>` : `<p class="msg" aria-live="polite">${esc(P.msg)}</p>`;
+    inner = `${setBar()}<div class="group">${note}<div aria-live="polite">${factHtml(c.a, c.b, revealed ? ans : '?', revealed, 104)}</div></div>
+      ${help ? `<div class="group">${msg}${help}</div>` : msg}
+      ${P.phase === 'right' || P.phase === 'fix' ? btn('next', 'Next') : answerForm(`${c.a} times ${c.b}`)}
+      ${P.phase === 'ask' && c.mode !== 'final' ? `<button type="button" class="link" id="showMe">Show me</button>` : ''}`;
+  }
+  return `<div class="board"><div class="stack">${inner}</div></div>`;
+}
+
+function bindPractice(c) {
+  const more = $('#more');
+  if (more) { more.addEventListener('click', () => { P.done = 0; P.onBreak = false; render(); }); more.focus({ preventScroll: true }); onSpoken = (v) => { if (v === 'next') more.click(); }; return; }
+  const tb = $('#trickBtn');
+  if (tb) { tb.addEventListener('click', () => advance(false)); tb.focus({ preventScroll: true }); onSpoken = (v) => { if (v === 'next' || v === 'help') tb.click(); }; return; }
+  const next = $('#next');
+  if (next) {
+    const counted = c.kind === 'q';
+    next.addEventListener('click', () => advance(counted));
+    next.focus({ preventScroll: true }); onSpoken = (v) => { if (v === 'next') next.click(); };
+    return;
+  }
+  bindAnswer((raw, byVoice) => submitAnswer(c, raw, byVoice));
+  const sm = $('#showMe'); if (sm) sm.addEventListener('click', () => showMe(c));
+}
+
+function submitAnswer(c, raw) {
+  const val = parseInt(raw, 10);
+  if (isNaN(val)) return;
+  const ans = (c.kind === 'walk' ? c.t : c.a) * c.b, right = val === ans;
+  const first = P.tries === 0;
+  P.tries++;
+  let r = null;
+  if (first) { r = E.attempt(S, right, today(), rng); save(); }
+  if (c.kind === 'walk') {
+    if (right) return advance(true); // written into the list; on to the next rung
+    if (P.phase === 'ask') { P.phase = 'hint'; P.msg = ''; } else { P.phase = 'shown'; P.msg = 'Type it once.'; }
+    return render();
+  }
+  if (right) {
+    P.phase = 'right';
+    P.msg = first ? 'Yes.' : 'That’s it.';
+    return render();
+  }
+  if (P.phase === 'shown') return render(); // typing the shown answer once: try again
+  if (c.mode === 'final') { P.phase = 'fix'; P.fix = null; P.msg = `It’s ${ans}.`; return render(); }
+  // Fix-it: the right answer, no red, then build it from a fact they know.
+  P.phase = 'fix';
+  P.fix = (r && r.build) || E.buildFor(S, c.a, c.b).lines;
+  P.msg = `${c.a} × ${c.b} is ${ans}. Let’s build it.`;
+  render();
+}
+function showMe(c) {
+  if (P.tries === 0) { E.attempt(S, false, today(), rng); save(); P.tries = 1; }
+  if (c.kind === 'walk') { P.phase = 'hint'; P.msg = ''; return render(); }
+  P.phase = 'fix';
+  P.fix = E.buildFor(S, c.a, c.b).lines;
+  P.msg = `${c.a} × ${c.b} is ${c.a * c.b}. Let’s build it.`;
+  render();
+}
+
+// ================= ONE NUMBER AT A TIME =================
+// Any table, in order. Feeds the same boxes: it introduces facts and records
+// misses, but never moves a fact up a box (the list is on screen).
+const T = { n: null, answers: {}, cur: 1, phase: 'ask', msg: '' };
+function renderTable() {
+  if (T.n == null) T.n = S.walk ? S.walk.t : E.MODULES[Math.min(S.module, 3)][0];
+  const n = T.n, allDone = T.cur > 12, shown = T.phase === 'shown';
+  const picker = Array.from({ length: 11 }, (_, i) => i + 2).map((p) => `<button type="button" data-n="${p}" aria-pressed="${p === n}" aria-label="The ${p}s">${p}</button>`).join('');
+  app.innerHTML = `
+  ${headerHtml(1040)}
+  <main style="padding-top:20px"><div class="wrap walk" style="max-width:1040px;gap:20px">
+    <div class="picker" role="group" aria-label="Choose a number">${picker}</div>
+    <div><section class="board" aria-labelledby="tTitle"><h1 id="tTitle" class="sr">The ${n}s</h1>
+      <div class="tbl">
+        <ol class="tbl-list" aria-label="The ${n}s so far">${ladderRows(n, T.cur, T.answers)}</ol>
+        <div class="tbl-focus">
+          ${allDone ? `<div class="stack"><p class="chalk" style="margin:0;font-size:48px;line-height:1.2">All twelve.</p>
+            <div class="row" style="justify-content:center"><button type="button" class="btn" id="again" style="min-height:56px;font-size:18px">Do the ${n}s again</button><button type="button" class="btn line" id="nextT" style="min-height:56px">Next number</button></div></div>`
+          : `${factHtml(n, T.cur, shown ? n * T.cur : '?', shown, 104)}
+            ${T.phase === 'hint' ? hintHtml(n, T.cur) : ''}
+            <p class="msg" aria-live="polite" style="min-height:32px">${esc(T.msg)}</p>
+            ${answerForm(`${n} times ${T.cur}`)}
+            ${T.phase === 'ask' ? `<button type="button" class="link" id="showMe">Give me a hint</button>` : ''}`}
+        </div>
+      </div></section>${ledge}</div>
+  </div></main>
+  <footer class="foot" style="max-width:1040px"><nav aria-label="Pages"><a href="#practice">Back to practice</a><a href="#board">My progress</a></nav></footer>`;
+  app.querySelectorAll('[data-n]').forEach((b) => b.addEventListener('click', () => { T.n = Number(b.dataset.n); resetTable(); }));
+  if (allDone) {
+    $('#again').addEventListener('click', resetTable);
+    $('#nextT').addEventListener('click', () => { T.n = T.n >= 12 ? 2 : T.n + 1; resetTable(); });
+    $('#again').focus({ preventScroll: true });
+    return;
+  }
+  bindAnswer((raw) => {
+    const val = parseInt(raw, 10); if (isNaN(val)) return;
+    const ans = n * T.cur, right = val === ans;
+    if (T.phase === 'ask') freeRecord(n, T.cur, right);
+    if (right) { T.answers[T.cur] = ans; T.cur++; T.phase = 'ask'; T.msg = ''; return renderTable(); }
+    if (T.phase === 'ask') { T.phase = 'hint'; T.msg = ''; } else { T.phase = 'shown'; T.msg = 'Type it once.'; }
+    renderTable();
+  });
+  const sm = $('#showMe'); if (sm) sm.addEventListener('click', () => { freeRecord(n, T.cur, false); T.phase = 'hint'; renderTable(); });
+}
+function resetTable() { T.answers = {}; T.cur = 1; T.phase = 'ask'; T.msg = ''; renderTable(); }
+function freeRecord(n, b, right) {
+  if (b === 1) return;
+  const k = E.key(n, b);
+  if (right && S.facts[k]) return; // known and right: leave it alone
+  E.record(S, k, right, today(), { noPromote: true }); save();
+}
+
+// ================= YOUR BOARD =================
+let howOpen = false;
+function level(k) { const b = E.boxOf(S, k); return b === 4 ? 3 : b >= 2 ? 2 : b === 1 ? 1 : 0; }
+function renderBoard() {
+  stopListening();
+  const names = ['Not yet', 'Just started', 'Getting there', 'Chalked in'];
+  const legend = [3, 2, 1, 0].map((lv) => `<span class="k"><span class="cellbox" aria-hidden="true" style="width:20px;height:20px;border-radius:5px;border-color:var(--legend-line)"><span class="fill ${lv ? 'l' + lv : ''}"></span></span>${names[lv]}</span>`).join('');
+  let cells = '<div class="h" aria-hidden="true">×</div>';
+  for (let h = 2; h <= 12; h++) cells += `<div class="h" role="columnheader">${h}</div>`;
+  const cnt = [0, 0, 0, 0];
+  for (let a = 2; a <= 12; a++) {
+    cells += `<div class="h" role="rowheader">${a}</div>`;
+    for (let b = 2; b <= 12; b++) {
+      const lv = level(E.key(a, b)); if (a <= b) cnt[lv]++;
+      cells += `<div class="cellbox" role="img" aria-label="${a} × ${b}: ${names[lv]}"><span class="fill ${lv ? 'l' + lv : ''}" aria-hidden="true"></span></div>`;
+    }
+  }
+  const bar = (name, n, lv) => `<div><span style="color:var(--chalk-muted)">${name}</span><span class="track"><i style="width:${Math.round(n / 66 * 100)}%;background:var(--fill${lv})"></i></span><b>${n}</b></div>`;
+  const st = E.status(S);
+  const where = S.phase === 'done' ? 'All 66 done. Keep them sharp whenever you like.'
+    : S.phase === 'final' || S.phase === 'review' ? `Final check${st.finalBest != null ? ` · best so far ${st.finalBest} of 66` : ''}`
+    : `Level ${S.module + 1} of 4: ${MODULE_NAMES[S.module]}${S.phase === 'test' ? ` · test: ${st.windowRight} of the last ${st.windowSize} right${st.newLeft ? `, ${st.newLeft} new still to get right` : ''}` : ''}`;
+  app.innerHTML = `
+  ${headerHtml(840)}
+  <main><div class="wrap progress">
+    <section class="board">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px 24px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <h1>My progress</h1>
+          <p class="chalk" style="margin:0;font-size:24px;color:var(--chalk-muted)"><span style="color:var(--accent)">${cnt[3]}</span> of 66 chalked in</p>
+        </div>
+        <p style="margin:0;font-size:15px;color:var(--chalk-muted)">${esc(where)}</p>
+      </div>
+      <div class="legend">${legend}</div>
+      <div class="grid" role="table" aria-label="Times table board">${cells}</div>
+      <div class="bars">${bar('Just started', cnt[1], 1)}${bar('Getting there', cnt[2], 2)}${bar('Chalked in', cnt[3], 3)}</div>
+      ${howOpen ? '<p style="margin:0;max-width:520px;font-size:17px;line-height:1.6">Each square fills with chalk as you learn it. A third, two thirds, then full: that one’s chalked in. A fact you miss starts again, and comes back sooner.</p>' : ''}
+      <div class="row"><a href="#practice" class="btn">Back to practice</a><button type="button" class="btn line" id="how" aria-expanded="${howOpen}">How it works</button></div>
+    </section>
+    ${ledge}
+  </div></main>
+  <footer class="foot" style="max-width:840px">
+    <nav aria-label="Pages"><a href="#practice">Back to practice</a><a href="#table">One number at a time</a></nav>
+    <div class="settings" role="group" aria-label="Settings">
+      <button type="button" id="dim" aria-pressed="${prefs.dim}">Dim the lights</button>
+      <button type="button" id="plain" aria-pressed="${prefs.plain}">Plain lettering</button>
+      <button type="button" id="saveBtn">Move to another device</button>
+    </div>
+    ${DEV ? devHtml() : ''}
+  </footer>`;
+  $('#how').addEventListener('click', () => { howOpen = !howOpen; renderBoard(); $('#how').focus(); });
+  $('#dim').addEventListener('click', () => { prefs.dim = !prefs.dim; applyPrefs(); renderBoard(); $('#dim').focus(); });
+  $('#plain').addEventListener('click', () => { prefs.plain = !prefs.plain; applyPrefs(); renderBoard(); $('#plain').focus(); });
+  $('#saveBtn').addEventListener('click', openSave);
+  if (DEV) bindDev();
+}
+
+// ---------- tester tools (?dev) ----------
+function devHtml() {
+  return `<details class="tools" ${devOpen ? 'open' : ''}><summary>Tester tools</summary>
+    <div style="display:flex;flex-direction:column;gap:12px;padding-top:12px">
+      <p style="margin:0">Pretend date ${today()} · level ${S.module + 1}, ${S.phase}</p>
+      <div class="settings"><button type="button" data-d="1">Next day</button><button type="button" data-d="3">+3 days</button><button type="button" data-d="7">+7 days</button><button type="button" id="devPass">Pass this level</button><button type="button" id="devReset">Reset all progress</button></div>
+    </div></details>`;
+}
+let devOpen = false;
+function bindDev() {
+  const d = app.querySelector('details.tools'); d.addEventListener('toggle', () => { devOpen = d.open; });
+  app.querySelectorAll('[data-d]').forEach((b) => b.addEventListener('click', () => { store.set(DEVKEY, String(devOffset() + Number(b.dataset.d))); resetPractice(); renderBoard(); }));
+  $('#devPass').addEventListener('click', () => { E.devPass(S, today()); save(); resetPractice(); renderBoard(); });
+  $('#devReset').addEventListener('click', () => { if (confirm('Reset all progress in this browser?')) { store.del(STORE); store.del(DEVKEY); S = E.freshState(today()); resetPractice(); renderBoard(); } });
+}
+
+// ---------- save code ----------
+const dlg = document.getElementById('saveDlg');
+const enc = (o) => btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+const dec = (s) => JSON.parse(decodeURIComponent(escape(atob(s.trim()))));
+function openSave() { document.getElementById('saveCode').value = enc(S); document.getElementById('loadMsg').textContent = ''; dlg.showModal(); }
+document.getElementById('copyCode').addEventListener('click', async () => { try { await navigator.clipboard.writeText(document.getElementById('saveCode').value); document.getElementById('loadMsg').textContent = 'Copied.'; } catch { document.getElementById('saveCode').select(); } });
+document.getElementById('loadBtn').addEventListener('click', () => {
+  try { const o = dec(document.getElementById('loadCode').value); if (!o || o.v !== 3 || !o.facts) throw 0; S = o; save(); resetPractice(); dlg.close(); render(); }
+  catch { document.getElementById('loadMsg').textContent = 'That code didn’t work. Check it was copied in full.'; }
+});
+document.getElementById('closeSave').addEventListener('click', () => dlg.close());
+
+render();
+})();
+</script>
+</body>
+</html>
