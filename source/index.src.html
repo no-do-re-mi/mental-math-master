@@ -32,8 +32,10 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui-fo
 button,input{font:inherit}
 /* tapping quickly on a tablet never zooms the page */
 button,input,a{touch-action:manipulation}
-:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
-.board :focus-visible{outline-color:#F2E7B8}
+:focus-visible{outline:none}
+/* the ring shows only once someone uses the keyboard to move around (Tab) */
+html.kbd :focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+html.kbd .board :focus-visible{outline-color:#F2E7B8}
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 a{color:var(--muted);text-underline-offset:4px}
 a:hover{color:var(--ink)}
@@ -183,6 +185,9 @@ details.tools summary{min-height:32px;font-weight:700;color:var(--ink);cursor:po
 <script>
 (() => {
 const E = Engine;
+// Show focus rings after Tab is used; hide them again on mouse or touch.
+addEventListener('keydown', (e) => { if (e.key === 'Tab') document.documentElement.classList.add('kbd'); }, true);
+addEventListener('pointerdown', () => document.documentElement.classList.remove('kbd'), true);
 const app = document.getElementById('app');
 const STORE = 'mm-calm-v3', PREFS = 'mm-calm-prefs', DEVKEY = 'mm-calm-dev-offset';
 const DEV = new URLSearchParams(location.search).has('dev');
@@ -393,8 +398,8 @@ function renderHome() {
       </div>
     </section>
     ${ledge}
-  </div></main>
-  <footer class="foot" style="max-width:760px"><nav aria-label="Pages"><a href="#board">My progress</a></nav></footer>`;
+    <nav aria-label="Pages" class="foot" style="padding:24px 0 0;align-items:center"><a href="#board">My Progress &amp; Settings</a></nav>
+  </div></main>`;
   $('#go').focus({ preventScroll: true });
   onSpoken = null;
 }
@@ -557,7 +562,7 @@ function renderTable() {
         </div>
       </div></section>${ledge}</div>
   </div></main>
-  <footer class="foot" style="max-width:1040px"><nav aria-label="Pages"><a href="#practice">Back to practice</a><a href="#board">My progress</a></nav></footer>`;
+  <footer class="foot" style="max-width:1040px"><nav aria-label="Pages"><a href="#practice">Back to practice</a><a href="#board">My Progress &amp; Settings</a></nav></footer>`;
   app.querySelectorAll('[data-n]').forEach((b) => b.addEventListener('click', () => { T.n = Number(b.dataset.n); resetTable(); }));
   if (allDone) {
     $('#again').addEventListener('click', resetTable);
